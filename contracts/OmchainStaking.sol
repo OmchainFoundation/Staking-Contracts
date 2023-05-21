@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.18;
 
-import "./ReentrancyGuard.sol";
-
 contract OmchainStakingV2 is ReentrancyGuard {
 
   /* ========== STATE VARIABLES AND STRUCTS ========== */
@@ -128,6 +126,14 @@ contract OmchainStakingV2 is ReentrancyGuard {
     return rewardRate * rewardsDuration;
   }
 
+  function stakes(address account) public view returns (StakeEntry[] memory) {
+      return stakeEntries[account];
+  }
+
+  function withdrawals(address account) public view returns (WithdrawalEntry[] memory) {
+      return withdrawalEntries[account];
+  }
+
   /* ========== TREASURY FUNCTIONS ========== */
   function deposit() public payable {
     emit DepositToTreasury(block.number, msg.value);
@@ -174,6 +180,8 @@ contract OmchainStakingV2 is ReentrancyGuard {
       require(msg.value == amount, "StakingRewards: stake amount does not match msg.value");
       uint256 stakeEnd = stakeTerms[stakeTerm].duration + block.timestamp;
       uint256 stakeConstant = stakeTerms[stakeTerm].stakeConstant;
+      rewardPerTokenStored = rewardPerToken();
+      lastUpdateTime = lastTimeRewardApplicable();
       stakeEntries[msg.sender].push(
         StakeEntry(
           amount, 
